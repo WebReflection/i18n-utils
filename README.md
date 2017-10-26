@@ -51,5 +51,7 @@ Try to save above file as `test.js` and then `i18n-utils ./test.js` providing `i
 
 If you'll `node test.js` after you will see the output will be `Ciao i18n!` instead of `Hello i18n!`.
 
+<img src="images/shell.png" width="400">
 
+<img src="images/browser.png" width="400">
 
