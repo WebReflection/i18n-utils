@@ -1,0 +1,36 @@
+{
+  "name": "i18n-utils",
+  "version": "0.0.0",
+  "description": "The i18n tag function utilities",
+  "bin": "bin.js",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WebReflection/i18n-dummy.git"
+  },
+  "keywords": [
+    "i18n",
+    "tag",
+    "template",
+    "literals",
+    "utilities"
+  ],
+  "author": "Andrea Giammarchi",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/WebReflection/i18n-dummy/issues"
+  },
+  "homepage": "https://github.com/WebReflection/i18n-dummy#readme",
+  "dependencies": {
+    "ascjs": "^1.0.2",
+    "commander": "^2.11.0",
+    "esprima": "^4.0.0",
+    "html-escaper": "^1.0.1",
+    "i18n-yummy": "^0.1.0",
+    "inquirer": "^3.3.0",
+    "opn": "^5.1.0"
+  }
+}
