@@ -39,13 +39,14 @@ const parse = (options, base, file, cache, db) => {
             case 'import':
             case 'require':
               const module = item.arguments[0];
-              let name = '';
-              process.chdir(base);
-              try { name = require.resolve(module.value); } catch(e) {}
-              if (name !== module.value && /\.m?js$/.test(name)) {
-                parseMore(module, name);
+              if (/^[./]/.test(module.value)) {
+                let name = '';
+                try { name = require.resolve(path.resolve(base, module.value)); } catch(o_O) {}
+                if (/\.m?js$/.test(name)) parseMore(module, name);
               } else {
-                console.log('  ignoring ' + module.value);
+                process.chdir(base);
+                const name = require.resolve(module.value);
+                if (name !== module.value) parseMore(module, name);
               }
               break;
           }
