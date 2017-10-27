@@ -1,6 +1,6 @@
 {
   "name": "i18n-utils",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "The i18n tag function utilities",
   "bin": "bin.js",
   "main": "index.js",
