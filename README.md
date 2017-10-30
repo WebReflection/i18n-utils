@@ -1,9 +1,24 @@
 # i18n-utils
-The i18n tag function utilitities (WIP)
+The i18n tag function utilitities.
 
 [![donate](https://img.shields.io/badge/$-donate-ff69b4.svg?maxAge=2592000&style=flat)](https://github.com/WebReflection/donate) [![License: ISC](https://img.shields.io/badge/License-ISC-yellow.svg)](https://opensource.org/licenses/ISC)
 
 [Related post](https://codeburst.io/easy-i18n-in-10-lines-of-javascript-poc-eb9e5444d71e).
+
+### Features
+
+  * write strings in your language, transparently show translations without changing your code
+  * created databases are usable through 10 lines of 100% cross browser JavaScript
+  * you handle translations either one after the other or in bulks
+  * you update only what changed, you never waste time scanning the rest
+  * you can swap indexes. `Date ${0}/${1}/${2}` can be translated as `Data ${2}/${0}/${1}`
+  * automatic clean of the DB. If you change or remove a template literal the DB won't contain it anymore
+
+**Possible future improvements**
+
+  * dynamic change of index names so instead of `${0}/${1}` you can specify `${'year'}/${'month'}` in every translation
+  * use a simple client/server one way hash for strings as key to reduce raw DB size
+
 
 ### Quick Introduction
 
@@ -54,4 +69,3 @@ If you'll `node test.js` after you will see the output will be `Ciao i18n!` inst
 <img src="images/shell.png" width="600">
 
 <img src="images/browser.png" width="600">
-
