@@ -10,6 +10,7 @@ const defaultOptions = {
 
 const fs = require('fs');
 const path = require('path');
+const index = fs.readFileSync(path.join(__dirname, 'index.html')).toString();
 
 const parse = (options, base, file, cache, db) => {
   let code = fs.readFileSync(file).toString();
@@ -28,8 +29,8 @@ const parse = (options, base, file, cache, db) => {
         case 'TaggedTemplateExpression':
           if (item.tag.name === 'i18n') {
             const template = item.quasi.quasis.map(quasi => quasi.value.raw);
-            db[template.join('\x01')] = {
-              t: template,
+            (db[template.join('\x01')] = {})[options.locale] = {
+              t: null,
               v: item.quasi.expressions.map((expression, i) => i)
             };
           }
@@ -76,28 +77,23 @@ module.exports = {
   },
   createTable: (db, locale, existent, translations) => {
     const table = [];
-    const keys = Object.keys(db[locale]);
-    translations.forEach(lang => {
-      const target = existent[lang];
-      if (target) {
-        Object.keys(target).forEach(key => {
-          if (keys.indexOf(key) < 0) {
-            delete target[key];
-          }
-        });
-      }
-      db[lang] = target || {};
+    const keys = Object.keys(db);
+    Object.keys(existent).forEach(key => {
+      if (keys.indexOf(keu) < 0) delete existent[key];
     });
     keys.forEach(key => {
       const out = [];
-      const source = db[locale][key];
+      const target = db[key];
+      const source = {
+        t: key.split('\x01'),
+        v: target[locale].v
+      };
       const sentence = source.t.map((chunk, i) => {
         return (i ? ('${' + (i - 1) + '}') : '') + chunk;
       }).join('');
       translations.forEach(lang => {
-        const target = db[lang];
-        if (!target.hasOwnProperty(key)) {
-          target[key] = {t: source.t, v: source.v};
+        if (!target.hasOwnProperty(lang)) {
+          target[lang] = {t: source.t, v: source.v};
           out.push(`<tr><td valign="top">${lang}</td><td valign="top"><textarea>${sentence}</textarea></td></tr>`);
         }
       });
@@ -109,104 +105,8 @@ module.exports = {
     const indentation = '\n        ';
     return table.length ? `<table cellpadding="0" cellspacing="0">${indentation}${table.join(indentation)}\n</table>` : '';
   },
-  createUpdate: (db, locale, table) => `<!doctype html>
-  <html>
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width,initial-scale=1.0">
-      <title>i18n Database Translations</title>
-      <style>
-      html {
-        font-family: sans-serif;
-        box-sizing: border-box;
-      }
-      *, *:before, *:after {
-        box-sizing: inherit;
-      }
-      table {
-        border-left: 1px solid #CCC;
-        border-right: 1px solid #CCC;
-        border-bottom: 1px solid #CCC;
-      }
-      table, textarea {
-        width: 100%;
-      }
-      td {
-        padding: 8px;
-      }
-      tr.native {
-        background: #F5F5F5;
-      }
-      tr.native > td {
-        border-top: 1px solid #CCC;
-        border-bottom: 1px solid #DDD;
-      }
-      tr.native > td:first-child {
-        font-weight: bold;
-      }
-      button {
-        margin: 8px auto;
-        width: 100%;
-        min-height: 40px;
-        font-weight: bold;
-      }
-      </style>
-      <script>
-      const i18n=${JSON.stringify({locale, db})};
-      function updateDB() {
-        [].forEach.call(document.querySelectorAll('tr.native'), updateDBEntry);
-        fetch('/update', {
-          method: 'post',
-          body: JSON.stringify(i18n.db)
-        })
-          .then(response => response.text())
-          .then(text => {
-            if (confirm('Database updated.\\nWould you like to exit?')) {
-              fetch('/exit').then(response => response.text()).then(() => close());
-            }
-          })
-          .catch(e => alert(e))
-        ;
-      }
-      function updateDBEntry(row) {
-        var
-          key = row.getAttribute('data-key'),
-          lang = row.querySelector('td').textContent,
-          updates = [row]
-        ;
-        while (
-          row &&
-          (row = row.nextElementSibling) &&
-          (row.className !== 'native')
-        ) {
-          updates.push(row);
-        }
-        row = updates.shift();
-        updates.forEach(parseDBEntry, {
-          key,
-          values: i18n.db[lang][key].v
-        });
-      }
-      function parseDBEntry(row) {
-        const lang = row.querySelector('td').textContent;
-        const text = row.querySelector('textarea').value;
-        const grab = (t, ...v) => {
-          i18n.db[lang][this.key] = {
-            t: t.slice(),
-            v: v.map(value => {
-              const i = this.values.indexOf(value);
-              if (i < 0) throw new Error(\x60Unable to define \x24{lang} sentence: \x24{text}\x60);
-              return i;
-            })
-          };
-        };
-        eval('grab\x60' + text + '\x60');
-      }
-      </script>
-    </head>
-    <body>
-      ${table}
-      <button onclick="updateDB()">update translations</button>
-    </body>
-  </html>`
+  createUpdate: (db, locale, table) => {
+    const info = {table, db: JSON.stringify({locale, db})};
+    return index.replace(/<\!--\$\{(.+?)\}-->|\/\*\$\{(.+?)\}\*\//g, ($0, $1, $2) => info[$1 || $2]);
+  }
 };

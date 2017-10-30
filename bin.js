@@ -35,7 +35,7 @@ program
         const askLanguages = (existent, translations) => {
           inquirer.prompt(options.translations ? [] : [{
             name: 'translations',
-            message: `you are translating '${options.locale || answers.locale}' to which language?`,
+            message: `you are translating '${locale}' to which language?`,
             default: translations.join(', ') || 'comma separated list: de, it, fr',
             validate(value) {
               return /^\s*[^,\s]+(?:\s*,\s*[^,\s]+)*?\s*$/.test(value);
@@ -104,13 +104,13 @@ program
         };
         const locale = options.locale || answers.locale;
         const output = options.output || answers.output;
-        const db = {};
-        db[locale] = i18nUtils.createDefaultDB(file);
+        const db = i18nUtils.createDefaultDB(file, {locale});
         file = path.resolve(process.cwd(), output);
         fs.stat(file, (err, stat) => {
           if (!err && stat.isFile()) {
             const existent = require(file);
-            askLanguages(existent, Object.keys(existent).filter(lang => lang !== locale));
+            const key = Object.keys(existent)[0];
+            askLanguages(existent, Object.keys(existent[key] || {}).filter(lang => lang !== locale));
           } else {
             askLanguages({}, []);
           }

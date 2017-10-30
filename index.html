@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>i18n Database Translations</title>
+    <style>
+    html {
+      font-family: sans-serif;
+      box-sizing: border-box;
+    }
+    *, *:before, *:after {
+      box-sizing: inherit;
+    }
+    table {
+      border-left: 1px solid #CCC;
+      border-right: 1px solid #CCC;
+      border-bottom: 1px solid #CCC;
+    }
+    table, textarea {
+      width: 100%;
+    }
+    td {
+      padding: 8px;
+    }
+    tr.native {
+      background: #F5F5F5;
+    }
+    tr.native > td {
+      border-top: 1px solid #CCC;
+      border-bottom: 1px solid #DDD;
+    }
+    tr.native > td:first-child {
+      font-weight: bold;
+    }
+    button {
+      margin: 8px auto;
+      width: 100%;
+      min-height: 40px;
+      font-weight: bold;
+    }
+    </style>
+    <script>
+    const i18n=/*${db}*/;
+    function updateDB() {
+      [].forEach.call(document.querySelectorAll('tr.native'), updateDBEntry);
+      fetch('/update', {
+        method: 'post',
+        body: JSON.stringify(i18n.db)
+      })
+        .then(response => response.text())
+        .then(text => {
+          if (confirm('Database updated.\nWould you like to exit?')) {
+            fetch('/exit').then(response => response.text()).then(() => close());
+          }
+        })
+        .catch(e => alert(e))
+      ;
+    }
+    function updateDBEntry(row) {
+      var
+        key = row.getAttribute('data-key'),
+        lang = row.querySelector('td').textContent,
+        updates = [row]
+      ;
+      while (
+        row &&
+        (row = row.nextElementSibling) &&
+        (row.className !== 'native')
+      ) {
+        updates.push(row);
+      }
+      row = updates.shift();
+      updates.forEach(parseDBEntry, {
+        key,
+        values: i18n.db[key][lang].v
+      });
+    }
+    function parseDBEntry(row) {
+      const lang = row.querySelector('td').textContent;
+      const text = row.querySelector('textarea').value;
+      const grab = (t, ...v) => {
+        i18n.db[this.key][lang] = {
+          t: t.slice(),
+          v: v.map(value => {
+            const i = this.values.indexOf(value);
+            if (i < 0) throw new Error(`Unable to define ${lang} sentence: ${text}`);
+            return i;
+          })
+        };
+      };
+      eval('grab`' + text + '`');
+    }
+    </script>
+  </head>
+  <body>
+    <!--${table}-->
+    <button onclick="updateDB()">update translations</button>
+  </body>
+</html>
