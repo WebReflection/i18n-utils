@@ -26,9 +26,9 @@
   },
   "homepage": "https://github.com/WebReflection/i18n-dummy#readme",
   "dependencies": {
-    "ascjs": "^1.0.2",
+    "ascjs": "^2.0.1",
+    "babylon": "^6.18.0",
     "commander": "^2.11.0",
-    "esprima": "^4.0.0",
     "html-escaper": "^1.0.1",
     "i18n-yummy": "^0.2.0",
     "inquirer": "^3.3.0",

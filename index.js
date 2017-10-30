@@ -1,11 +1,34 @@
 const ascjs = require('ascjs');
 const escape = require('html-escaper').escape;
-const esprima = require('esprima');
+const parser = require('babylon');
 const defaultOptions = {
   sourceType: 'module',
-  jsx: true,
-  range: true,
-  tolerant: true
+  plugins: [
+    'estree',
+    'jsx',
+    'flow',
+    'typescript',
+    'doExpressions',
+    'objectRestSpread',
+    'decorators',
+    'decorators2',
+    'classProperties',
+    'classPrivateProperties',
+    'classPrivateMethods',
+    'exportExtensions',
+    'asyncGenerators',
+    'functionBind',
+    'functionSent',
+    'dynamicImport',
+    'numericSeparator',
+    'optionalChaining',
+    'importMeta',
+    'bigInt',
+    'optionalCatchBinding',
+    'throwExpressions',
+    'pipelineOperator',
+    'nullishCoalescingOperator'
+  ]
 };
 
 const fs = require('fs');
@@ -21,40 +44,45 @@ const parse = (options, base, file, cache, db) => {
       parse(options, path.dirname(name), name, cache, db);
     }
   };
-  esprima.parse(
-    code,
-    options,
-    item => {
-      switch (item.type) {
-        case 'TaggedTemplateExpression':
-          if (item.tag.name === 'i18n') {
-            const template = item.quasi.quasis.map(quasi => quasi.value.raw);
-            (db[template.join('\x01')] = {})[options.locale] = {
-              t: null,
-              v: item.quasi.expressions.map((expression, i) => i)
-            };
+  const findRequire = item => {
+    switch (item.type) {
+      case 'TaggedTemplateExpression':
+        if (item.tag.name === 'i18n') {
+          const template = item.quasi.quasis.map(quasi => quasi.value.raw);
+          (db[template.join('\x01')] = {})[options.locale] = {
+            t: null,
+            v: item.quasi.expressions.map((expression, i) => i)
+          };
+        }
+        break;
+      case 'CallExpression':
+        switch (item.callee.name) {
+          case 'import':
+          case 'require':
+            const module = item.arguments[0];
+            if (/^[./]/.test(module.value)) {
+              let name = '';
+              try { name = require.resolve(path.resolve(base, module.value)); } catch(o_O) {}
+              if (/\.m?js$/.test(name)) parseMore(module, name);
+            } else {
+              process.chdir(base);
+              const name = require.resolve(module.value);
+              if (name !== module.value) parseMore(module, name);
+            }
+            break;
+        }
+      default:
+        for (let key in item) {
+          if (typeof item[key] === 'object') {
+            findRequire(item[key] || {});
           }
-          break;
-        case 'CallExpression':
-          switch (item.callee.name) {
-            case 'import':
-            case 'require':
-              const module = item.arguments[0];
-              if (/^[./]/.test(module.value)) {
-                let name = '';
-                try { name = require.resolve(path.resolve(base, module.value)); } catch(o_O) {}
-                if (/\.m?js$/.test(name)) parseMore(module, name);
-              } else {
-                process.chdir(base);
-                const name = require.resolve(module.value);
-                if (name !== module.value) parseMore(module, name);
-              }
-              break;
-          }
-          break;
-      }
+        }
+        break;
     }
-  );
+  };
+  const parsed = parser.parse(code, options);
+  debugger;
+  parsed.program.body.forEach(findRequire);
   return db;
 };
 
