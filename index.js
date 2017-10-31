@@ -53,6 +53,7 @@ const parse = (options, base, file, cache, db) => {
             t: null,
             v: item.quasi.expressions.map((expression, i) => i)
           };
+          findRequire(item.quasi);
         }
         break;
       case 'CallExpression':
@@ -107,7 +108,7 @@ module.exports = {
     const table = [];
     const keys = Object.keys(db);
     Object.keys(existent).forEach(key => {
-      if (keys.indexOf(keu) < 0) delete existent[key];
+      if (keys.indexOf(key) < 0) delete existent[key];
     });
     keys.forEach(key => {
       const out = [];
