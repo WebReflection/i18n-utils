@@ -67,8 +67,10 @@ const parse = (options, base, file, cache, db) => {
               if (/\.m?js$/.test(name)) parseMore(module, name);
             } else {
               process.chdir(base);
-              const name = require.resolve(module.value);
-              if (name !== module.value) parseMore(module, name);
+              try {
+                const name = require.resolve(module.value);
+                if (name !== module.value) parseMore(module, name);
+              } catch(meh) {}
             }
             break;
         }
