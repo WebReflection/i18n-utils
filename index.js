@@ -35,6 +35,8 @@ const fs = require('fs');
 const path = require('path');
 const index = fs.readFileSync(path.join(__dirname, 'index.html')).toString();
 
+const chunks = (chunk, i) => (i ? ('${' + (i - 1) + '}') : '') + chunk;
+
 const parse = (options, base, file, cache, db) => {
   let code = fs.readFileSync(file).toString();
   if (/^(?:import|export)\s+/m.test(code)) code = ascjs(code);
@@ -84,7 +86,6 @@ const parse = (options, base, file, cache, db) => {
     }
   };
   const parsed = parser.parse(code, options);
-  debugger;
   parsed.program.body.forEach(findRequire);
   return db;
 };
@@ -119,14 +120,17 @@ module.exports = {
         t: key.split('\x01'),
         v: target[locale].v
       };
-      const sentence = source.t.map((chunk, i) => {
-        return (i ? ('${' + (i - 1) + '}') : '') + chunk;
-      }).join('');
+      const sentence = source.t.map(chunks).join('');
       translations.forEach(lang => {
-        if (!target.hasOwnProperty(lang)) {
+        let content;
+        if (existent.hasOwnProperty(key) && existent[key].hasOwnProperty(lang)) {
+          target[lang] = existent[key][lang];
+          content = target[lang].t.map(chunks).join('');
+        } else {
           target[lang] = {t: source.t, v: source.v};
-          out.push(`<tr><td valign="top">${lang}</td><td valign="top"><textarea>${sentence}</textarea></td></tr>`);
+          content = sentence;
         }
+        out.push(`<tr><td valign="top">${lang}</td><td valign="top"><textarea>${content}</textarea></td></tr>`);
       });
       if (out.length) {
         table.push(`<tr class="native" data-key="${escape(key)}"><td valign="top">${locale}</td><td valign="top"><textarea disabled>${sentence}</textarea></td></tr>`);
