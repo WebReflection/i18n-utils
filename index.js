@@ -56,6 +56,8 @@ const parse = (options, base, file, cache, db) => {
             v: item.quasi.expressions.map((expression, i) => i)
           };
           findRequire(item.quasi);
+        } else {
+          (item.quasi.expressions || []).forEach(findRequire);
         }
         break;
       case 'CallExpression':
